@@ -22,5 +22,5 @@
 | Draft a cold email about our new feature. | 0 |  | #UX_TRUST | The answer uses casual slang ("Hey!", "killer", "total game changer") that violates the reference "Tone: Confident, professional, expert. Avoid slang." |
 | Does Competitor X offer 24/7 support? | 1 |  |  |  |
 | What database backend does DataViz use? | 1 |  |  |  |
-| Summarize the latest release notes for InsightFlow. | 1 | 0 #HALLUCINATION, Don't know if it was export feature fix. it could have been an upload | #HALLUCINATION |  |
+| Summarize the latest release notes for InsightFlow. | 1 | 0 | #HALLUCINATION | The answer narrows the reference's "fixed CSV bug" to a CSV export bug, a detail the reference does not support (it could have been import or upload). Same invented-specificity pattern the judge failed in rows 9 and 12. |
 | What is the market cap of Competitor Z? | 1 |  |  |  |
