@@ -12,16 +12,16 @@
 
 ## 2. Measurements, The Execution
 
-**User promise.** For VP-level strategists at our top enterprise accounts, Ascend IQ promises to answer plain-language market questions in under 10 seconds (P95), with every figure traceable to Ascend’s verified data, or to say clearly when it doesn’t know, so that clients keep making decisions on Ascend data and renew.
+**User promise.** For VP-level strategists at our top enterprise accounts, Ascend IQ promises to answer plain-language market questions in under 10 seconds (P95), with every figure traceable to Ascend’s verified data, or to say clearly when it doesn’t know, so strategists can build board-ready comparisons in minutes instead of hours, and keep making decisions on Ascend data and renew.
 
 **Top 3 trust metrics:**
 - **Latency**, Response speed (P95 / P99). Slow kills engagement.
 - **Hallucination Rate**, % of outputs that are confidently false or fabricated.
 - **Robustness**, Coherence on messy, adversarial, out-of-scope inputs.
 
-**Why these three:** Latency (P95): protects “under 10 seconds.” If an answer is slower than searching the platform by hand, clients go back to doing it by hand.
-Hallucination rate: protects “verified.” One invented figure in a board deck breaks the reason clients pay.
-Robustness: protects “plain-language.” Executives ask vague, multi-part or out-of-scope questions (like a market Ascend doesn’t cover), and the agent should decline, not guess.
+**Why these three:** Latency (P95 ≤ 10s, question to complete answer with sources): protects “under 10 seconds.” If an answer is slower than searching the platform by hand, clients go back to doing it by hand.
+Hallucination Rate (0 invented figures in the test set): protects “verified.” One invented figure in a board deck breaks the reason clients pay.
+Robustness (≥ 95% clean declines): protects “plain-language.” Executives ask hurried, vague or multi-part questions. The agent should answer the part Ascend covers and decline the part it doesn’t, not guess.
 
 
 ## 3. Strategic Trade-Offs, The Cost
