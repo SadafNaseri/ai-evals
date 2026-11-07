@@ -1,4 +1,4 @@
-# AI Evals: Final Project
+# AI Evals: Final Project, by Sadaf Naseri.
 
 > My final project for Product School's **AI Evals** certification. One evaluation system for a real LLM feature, from strategy, through failure discovery and an automated eval suite, to the gates and governance that let it ship safely.
 
