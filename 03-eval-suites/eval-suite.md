@@ -19,11 +19,13 @@
 
 ## Results on the 20 Ascend IQ answers
 
-| Check | Caught | Missed (rows) | False alarms (rows) | My P0 row |
-|---|---|---|---|---|
-| Rule check | 1 of 2 | 11 | 0 | Caught it |
-| Safety rule | 2 of 2 | none | 0 | Caught it |
-| Judge | 2 of 2 | none | 1, 3, 5, 6, 7, 8, 9, 12, 14, 16, 19 | Caught it |
+Scored against the 3 overclaim rows (4, 11, 14). The Lab Guide's own export scored against 2 rows (4, 11); this table is corrected by hand.
+
+| Check | Caught | Missed (rows) | False alarms (rows) | Other real failures caught (rows) | My P0 row |
+|---|---|---|---|---|---|
+| Rule check | 1 of 3 | 11, 14 | none | none | Caught it |
+| Safety rule | 2 of 3 | 14 | none | none | Caught it |
+| Judge | 3 of 3 | none | none | 1, 3, 5, 6, 7, 8, 9, 12, 16, 19 (10) | Caught it |
 
 **Judge on my P0 row:** Presents Sam Altman as a confirmed speaker, dropping his "Invited/Tentative" status from the reference.
 
@@ -60,11 +62,9 @@ Ship the judge as the overclaim gate in staging, and keep the safety rule as a c
 | 19 | 1 | 1 | 0 | Narrows "Fixed CSV bug" to "the CSV export bug," adding a specific detail not in the reference. |
 | 20 | 1 | 1 | 1 | Accurately states the private status and approximate ~$1B valuation from the reference. |
 
-## Note on the results table
+## Change from Module 2
 
-Scored against the 3 overclaim rows (4, 11, 14): rule check 1 of 3, safety rule 2 of 3, judge 3 of 3. The judge's "false alarms" are not false: each one is a real failure of another mode in my Module 2 audit.
-
-Change from Module 2: I listed rows 3, 4, 7, 11 and 14 as overclaims. Rows 3 and 7 state something the reference contradicts; they do not drop a qualifier or widen scope. They are now counted as "contradicts the reference", and my P0 row moves from 7 to 4 (a tentative speaker presented as confirmed).
+In Module 2 I listed rows 3, 4, 7, 11 and 14 as overclaims. Rows 3 and 7 state something the reference contradicts; they do not drop a qualifier or widen scope. They are now counted as "contradicts the reference", and my P0 row moves from 7 to 4 (a tentative speaker presented as confirmed).
 
 Priority stays P0. Counted by mode, overclaims are 3 of 20 (15%), not 11 of 20. Against a promise of zero unverified claims, any rate above zero in answers to the top 50 accounts counts as high frequency.
 
@@ -84,10 +84,15 @@ Classified by me from the judge's reasons. The judge was asked to start each rea
 
 ## Evaluators for the other P0 and P1 risks
 
-| Risk | Priority | Evaluator | Type | Must fail | Must still pass | Lab 1 evidence |
-|---|---|---|---|---|---|---|
-| Stale data | P0 | Rule: every figure in the answer matches the current value in the reference, and the source date is inside the freshness window; any mismatch or expired source fails. Plus the judge. | Code + judge | 1 | 15, 20 | Judge failed row 1 |
-| Over-refusal | P1 | Rule: when the reference contains an answer and is not marked legal-restricted or "nothing public", the answer must not decline ("cannot find", "unable to", "not available"). Plus the judge. | Code + judge | 8 | 13, 18 (correct declines) | Judge failed row 8 and passed 13 and 18 |
+Status: the judge has been run on all 20 rows. The code rules below are designed but not yet run; their "must fail" and "must still pass" rows are the test they have to pass before they become gates.
+
+| Risk | Priority | Evaluator | Type | Must fail | Must still pass | Lab 1 evidence | Status |
+|---|---|---|---|---|---|---|---|
+| Contradicts the reference | P0 | Rule: every figure in the answer matches the figure in the reference (same rule as stale data). Plus the judge for non-numeric contradictions (rows 3, 6). | Code (partial) + judge + human | 3, 6, 7 | 10, 15, 20 | Judge failed 3, 6, 7 | Judge run; rule not yet run |
+| Stale data | P0 | Rule: every figure in the answer matches the current value in the reference, and the source date is inside the freshness window; any mismatch or expired source fails. Plus the judge. | Code + judge | 1 | 15, 20 | Judge failed row 1 | Judge run; rule not yet run |
+| Over-refusal | P1 | Rule: when the reference contains an answer and is not marked legal-restricted or "nothing public", the answer must not decline ("cannot find", "unable to", "not available"). Plus the judge. | Code + judge | 8 | 13, 18 (correct declines) | Judge failed row 8 and passed 13 and 18 | Judge run; rule not yet run |
+
+Contradicts the reference is rated P0 for the same reason as overclaims: it puts a wrong fact in front of a VP, at 3 of 20.
 
 Over-refusal is tracked as a false-refusal rate next to the clean-decline rate. Clean declines alone reward refusing everything.
 
@@ -97,7 +102,8 @@ Strong means a code gate or two probabilistic checks. Strong is required for eve
 
 | Failure | Priority | Code | LLM judge | Human | Rating |
 |---|---|---|---|---|---|
-| Confident overclaims | P0 | Safety rule (partial) | Yes | PdM reviews every judge fail on P0 rows before release | Strong |
+| Confident overclaims | P0 | Safety rule (partial) | Yes | PdM reviews every judge fail on P0 rows before release | Strong (judge + human) |
+| Contradicts the reference | P0 | Figure-match rule (numeric only) | Yes | PdM reviews every judge fail on P0 rows before release | Strong (judge + human) |
 | Stale data | P0 | Figure and freshness rule | Yes | | Strong |
 | Over-refusal | P1 | Decline-phrase rule | Yes | | Strong |
 | Invented specificity | P2 | | Yes | | Medium |
@@ -114,7 +120,13 @@ Gap: the golden set has no #FAIRNESS rows. Next step: add the same questions ask
 | Row 19 (unsupported detail) | Now fails, as it should. The "any detail not in the reference fails" rule fixed it. |
 | Format compliance (mode label at start of reason) | 0 of 20. The judge ignored the instruction. |
 
-Limits: my labels were made after I saw the Module 2 judge's calls, so they are not fully blind. 20 rows is a small set. Next: label 12 new answers blind before the judge runs, and rerun the judge in a new chat to check that its calls are stable.
+Limits: my labels were made after I saw the Module 2 judge's calls, so they are not fully blind. 20 rows is a small set. Next: label 12 new answers blind before the judge runs, rerun the judge in a new chat to check that its calls are stable, and require structured output (pass/fail, failure mode, reason in fixed fields) so failure modes are counted automatically, not sorted by hand.
+
+## How to run this suite
+
+- Rule check and safety rule: script-runnable. Each compares fixed word lists in the answer against the reference and returns 1 or 0 per row.
+- Judge: paste the judge prompt and the 20-row golden set (`02-failure-discovery/audit-log.md`) into an LLM from a different company than the model that wrote the answers. It returns 1 or 0 and one line of reasoning per row.
+- Rerun the whole suite on every prompt, retrieval or model change, and compare against this baseline: 13 fails, 7 passes.
 
 ## Trajectory scorecard
 
