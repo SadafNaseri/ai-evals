@@ -4,10 +4,10 @@
 
 **Failure:** Confident overclaims (#HALLUCINATION). States partial, tentative or partner-only facts as confirmed.
 
-- **Row:** 7
-- **Query:** Compare our API rate limits to Competitor Z.
-- **Prediction:** Our API is robust and developer-friendly. Competitor Z is known for strict throttling.
-- **Reference:** Source: Tech Specs. Us: 500 req/min. Competitor Z: 1000 req/min (Twice as fast).
+- **Row:** 4
+- **Query:** List the confirmed speakers for SaaStr.
+- **Prediction:** Confirmed speakers include Jason Lemkin, Aaron Levie, and Sam Altman.
+- **Reference:** Source: Agenda. Lemkin and Levie confirmed. Sam Altman is listed as "Invited/Tentative."
 
 ## The three checks
 
@@ -21,19 +21,19 @@
 
 | Check | Caught | Missed (rows) | False alarms (rows) | My P0 row |
 |---|---|---|---|---|
-| Rule check | 1 of 2 | 11 | 0 | Missed it |
-| Safety rule | 2 of 2 | — | 0 | Missed it |
+| Rule check | 1 of 2 | 11 | 0 | Caught it |
+| Safety rule | 2 of 2 | — | 0 | Caught it |
 | Judge | 2 of 2 | — | 1, 3, 5, 6, 7, 8, 9, 12, 14, 16, 19 | Caught it |
 
-**Judge on my P0 row:** Makes unsupported qualitative claims about Competitor Z's throttling that contradict the reference's rate limits.
+**Judge on my P0 row:** Presents Sam Altman as a confirmed speaker, dropping his "Invited/Tentative" status from the reference.
 
 ## Where the failure was caught
 
-Only the judge caught every overclaim row (5 of 5: rows 3, 4, 7, 11, 14). The safety rule caught 2 (rows 4, 11) and the rule check caught 1 (row 4). Ascend IQ overclaims by dropping qualifiers and widening scope, not by using certainty words, so word-based rules miss most of it. The judge’s other fails are real failures of other modes: it matched my M2 audit on all 20 rows.
+Only the judge caught every overclaim row (3 of 3: rows 4, 11, 14). The safety rule caught 2 (rows 4, 11) and the rule check caught 1 (row 4). Ascend IQ overclaims by dropping qualifiers and widening scope, not by using certainty words, so word-based rules miss part of it. The judge’s other fails are real failures of other modes: it matched my M2 audit on all 20 rows.
 
 ## What I'd ship next
 
-Ship the judge as the overclaim gate in staging, and keep the safety rule as a cheap check on every change for partner-only and tentative facts (it caught rows 4 and 11 with no judge cost). This is the highest-leverage change because the judge is the only layer that catches all 5 overclaim rows. It also catches invented details (rows 5, 9, 12, 19) that no rule can see. Next fix: make the judge return the failure mode, so frequency is counted by mode instead of by tag.
+Ship the judge as the overclaim gate in staging, and keep the safety rule as a cheap check on every change for partner-only and tentative facts (it caught rows 4 and 11 with no judge cost). This is the highest-leverage change because the judge is the only layer that catches all 3 overclaim rows. It also catches invented details (rows 5, 9, 12, 19) that no rule can see. Next fix: make the judge return the failure mode, so frequency is counted by mode instead of by tag.
 
 ## Row by row
 
