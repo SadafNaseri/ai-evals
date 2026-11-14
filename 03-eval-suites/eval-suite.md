@@ -22,8 +22,8 @@
 | Check | Caught | Missed (rows) | False alarms (rows) | My P0 row |
 |---|---|---|---|---|
 | Rule check | 1 of 2 | 11 | 0 | Caught it |
-| Safety rule | 2 of 2 | — | 0 | Caught it |
-| Judge | 2 of 2 | — | 1, 3, 5, 6, 7, 8, 9, 12, 14, 16, 19 | Caught it |
+| Safety rule | 2 of 2 | none | 0 | Caught it |
+| Judge | 2 of 2 | none | 1, 3, 5, 6, 7, 8, 9, 12, 14, 16, 19 | Caught it |
 
 **Judge on my P0 row:** Presents Sam Altman as a confirmed speaker, dropping his "Invited/Tentative" status from the reference.
 
@@ -59,3 +59,63 @@ Ship the judge as the overclaim gate in staging, and keep the safety rule as a c
 | 18 | 1 | 1 | 1 | Appropriately declines to answer since no backend architecture is listed in the reference. |
 | 19 | 1 | 1 | 0 | Narrows "Fixed CSV bug" to "the CSV export bug," adding a specific detail not in the reference. |
 | 20 | 1 | 1 | 1 | Accurately states the private status and approximate ~$1B valuation from the reference. |
+
+## Note on the results table
+
+Scored against the 3 overclaim rows (4, 11, 14): rule check 1 of 3, safety rule 2 of 3, judge 3 of 3. The judge's "false alarms" are not false: each one is a real failure of another mode in my Module 2 audit.
+
+Change from Module 2: I listed rows 3, 4, 7, 11 and 14 as overclaims. Rows 3 and 7 state something the reference contradicts; they do not drop a qualifier or widen scope. They are now counted as "contradicts the reference", and my P0 row moves from 7 to 4 (a tentative speaker presented as confirmed).
+
+Priority stays P0. Counted by mode, overclaims are 3 of 20 (15%), not 11 of 20. Against a promise of zero unverified claims, any rate above zero in answers to the top 50 accounts counts as high frequency.
+
+## Judge fails by failure mode (not by tag)
+
+Classified by me from the judge's reasons. The judge was asked to start each reason with a mode label but did not, so this sorting is manual.
+
+| Failure mode | Rows | Count | Root cause |
+|---|---|---|---|
+| Confident overclaims (dropped qualifier or widened scope) | 4, 11, 14 | 3 | Generation |
+| Contradicts the reference | 3, 6, 7 | 3 | Generation |
+| Invented specificity | 5, 9, 12, 19 | 4 | Generation |
+| Stale data | 1 | 1 | Retrieval |
+| Over-refusal | 8 | 1 | Prompt (decline rule too strict) |
+| Off-brand tone | 16 | 1 | Prompt |
+| **Total** | | **13** | |
+
+## Evaluators for the other P0 and P1 risks
+
+| Risk | Priority | Evaluator | Type | Must fail | Must still pass | Lab 1 evidence |
+|---|---|---|---|---|---|---|
+| Stale data | P0 | Rule: every figure in the answer matches the current value in the reference, and the source date is inside the freshness window; any mismatch or expired source fails. Plus the judge. | Code + judge | 1 | 15, 20 | Judge failed row 1 |
+| Over-refusal | P1 | Rule: when the reference contains an answer and is not marked legal-restricted or "nothing public", the answer must not decline ("cannot find", "unable to", "not available"). Plus the judge. | Code + judge | 8 | 13, 18 (correct declines) | Judge failed row 8 and passed 13 and 18 |
+
+Over-refusal is tracked as a false-refusal rate next to the clean-decline rate. Clean declines alone reward refusing everything.
+
+## Coverage matrix
+
+Strong means a code gate or two probabilistic checks. Strong is required for every P0 and P1.
+
+| Failure | Priority | Code | LLM judge | Human | Rating |
+|---|---|---|---|---|---|
+| Confident overclaims | P0 | Safety rule (partial) | Yes | PdM reviews every judge fail on P0 rows before release | Strong |
+| Stale data | P0 | Figure and freshness rule | Yes | | Strong |
+| Over-refusal | P1 | Decline-phrase rule | Yes | | Strong |
+| Invented specificity | P2 | | Yes | | Medium |
+| Off-brand tone | P3 | | Yes | | Medium |
+| Fairness (persona, region, company size) | Not rated | | | | Weak: no golden-set row tests it |
+
+Gap: the golden set has no #FAIRNESS rows. Next step: add the same questions asked as different personas, regions and company sizes, and compare pass rates.
+
+## Judge calibration
+
+| Measure | Result |
+|---|---|
+| Judge (Gemini) vs my Module 2 labels, pass/fail | 20 of 20 agree (Module 2 judge: 19 of 20) |
+| Row 19 (unsupported detail) | Now fails, as it should. The "any detail not in the reference fails" rule fixed it. |
+| Format compliance (mode label at start of reason) | 0 of 20. The judge ignored the instruction. |
+
+Limits: my labels were made after I saw the Module 2 judge's calls, so they are not fully blind. 20 rows is a small set. Next: label 12 new answers blind before the judge runs, and rerun the judge in a new chat to check that its calls are stable.
+
+## Trajectory scorecard
+
+Pending. The golden set holds question, answer and reference only, with no tool calls. To score: compare each recorded run with the reference path on the six dimensions (tool selection, argument correctness, redundant or looping steps, recovery, plan coherence, task completion).
