@@ -1,19 +1,17 @@
-# Eval Spec · Ascend IQ
-
-Paste the reply from the Module 3 Lab Guide (Activity 2) over this file once you've edited the messages, then commit.
+# Eval Spec · Confident overclaims
 
 | Part | Spec |
 |---|---|
-| Target risk | |
-| Evaluator | |
-| Threshold | |
-| Business stakes | |
-| Owner | |
+| Target risk | Confident overclaims (#HALLUCINATION, output risk): answers state partial, tentative, partner-only or regional facts as confirmed, or wider than the source. Seen in 3 of 20 golden-set answers (rows 4, 11, 14). Root cause: generation (the answer goes beyond what was retrieved), not retrieval. |
+| Evaluator | Two layers plus human review. (1) Safety rule, code, runs on every pull request against the 20-row golden set and blocks the merge. Status terms: partner-only, partner, unconfirmed, tentative, invited, beta, planned, pending, not public (case-insensitive). If the reference text contains a status term next to a fact, the answer passes only if the same sentence names that fact with the same term or a synonym from the list, or uses a decline phrase ("can't confirm", "not confirmed", "not public"). Returns 1 or 0. The golden set holds the reference as free text today; adding a structured status field per fact is the next step. (2) LLM judge, staging, on the same 20 rows, from a different company than Ascend IQ's model, blocks the release: fails any claim more certain or broader than the reference, any dropped qualifier, or any detail not in the reference; returns 1 or 0 plus one line of reasoning. (3) Human: the PdM reviews every row the judge fails as an overclaim or a contradiction of the reference (the two P0 failure modes) before release. |
+| Threshold | 0 overclaim fails on the golden set, and the safety rule passes 100%. Supported by Lab 1: the judge caught 3 of 3 overclaim rows and agreed with my audit on 20 of 20, so a zero-tolerance line can be enforced without false fails. The current beta fails it (3 of 20). |
+| Business stakes | VPs take wrong competitive positions to their boards on Ascend's word. That breaks the reason clients pay for verified intelligence and puts renewals across the top 50 accounts at risk: at least $2.5M a year (50 accounts x $50K minimum). |
+| Owner | GPdM for Ascend IQ (me) owns the threshold and the ship sign-off. The engineering lead owns both gates in the pipeline. Fixes go to the prompt/generation team. |
 
 ## Messages
 
-**Engineering · acceptance criteria:**
+**Engineering · acceptance criteria:** On every pull request, run the safety rule on the 20 golden-set rows and block the merge if any row fails: when the reference has a status term (partner-only, partner, unconfirmed, tentative, invited, beta, planned, pending, not public) next to a fact, the answer's sentence about that fact must contain the same term, a listed synonym, or a decline phrase ("can't confirm", "not confirmed", "not public"). In staging, run the judge (from a different model company than Ascend IQ) on the same rows and block the release on any overclaim fail; release needs 0 judge overclaim fails and a 100% safety-rule pass.
 
-**Design · what the user sees:**
+**Design · what the user sees:** In production there is no golden-set reference, so the guardrail applies the same status terms to the retrieved source document: when the source tags a fact with a status the answer leaves out, the user sees the answer with that status shown next to the fact and its source (for example, "Sam Altman: invited, not confirmed, per the SaaStr agenda"), never an error or a blank reply. If the status cannot be shown, the user sees "Ascend can't confirm this yet" for that fact, and the rest of the answer stays.
 
-**Leadership · risk and return:**
+**Leadership · risk and return:** This removes the risk that a top-50 client presents a tentative or partner-only fact to their board as confirmed on Ascend's word, which today happens in 3 of 20 test answers and puts at least $2.5M a year in renewals at risk. The cost is a few seconds of checking per answer and some extra "not confirmed" labels; we will hold over-refusals and P95 latency to their own gates in Module 4 so this fix does not create a new problem.
