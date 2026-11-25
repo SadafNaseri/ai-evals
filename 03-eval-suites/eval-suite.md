@@ -98,29 +98,50 @@ Over-refusal is tracked as a false-refusal rate next to the clean-decline rate. 
 
 ## Coverage matrix
 
-Strong means a code gate or two probabilistic checks. Strong is required for every P0 and P1.
+Strong means a code gate or two probabilistic checks. Strong is required for every P0 and P1. Two ratings per row: "Designed" is the coverage once every listed check runs; "Today" counts only checks that have actually run on the golden set (the judge on all 20 rows, the rule check and safety rule in Lab 1). Human review is counted as a layer, not as a second probabilistic check.
 
 | Failure | Priority | Code | LLM judge | Human | Rating |
 |---|---|---|---|---|---|
-| Confident overclaims | P0 | Safety rule (partial) | Yes | PdM reviews every judge fail on P0 rows before release | Strong (judge + human) |
-| Contradicts the reference | P0 | Figure-match rule (numeric only) | Yes | PdM reviews every judge fail on P0 rows before release | Strong (judge + human) |
-| Stale data | P0 | Figure and freshness rule | Yes | | Strong |
-| Over-refusal | P1 | Decline-phrase rule | Yes | | Strong |
+| Confident overclaims | P0 | Safety rule (run; caught 2 of 3) | Yes (run; 3 of 3) | PdM reviews every judge fail on P0 rows before release | Designed: Strong. Today: Medium (one judge plus a partial code rule) |
+| Contradicts the reference | P0 | Figure-match rule (numeric only; not yet run) | Yes (run; 3 of 3) | PdM reviews every judge fail on P0 rows before release | Designed: Strong only for numeric facts. Today: Medium |
+| Stale data | P0 | Figure and freshness rule (not yet run) | Yes (run; caught row 1) | | Designed: Strong. Today: Medium |
+| Over-refusal | P1 | Decline-phrase rule (not yet run) | Yes (run; caught row 8) | | Designed: Strong. Today: Medium |
 | Invented specificity | P2 | | Yes | | Medium |
 | Off-brand tone | P3 | | Yes | | Medium |
+| Unverified source in a client answer (trajectory) | P0 | Source-provenance rule (not yet run) | Trajectory judge (run on 1 recorded run) | PdM reviews trajectory fails | Designed: Strong. Today: Medium |
 | Fairness (persona, region, company size) | Not rated | | | | Weak: no golden-set row tests it |
+
+Today no P0 or P1 meets Strong: every one rests on the judge alone, plus a partial safety rule for overclaims. This is a finding, not an omission: Ascend IQ cannot pass a release gate until every P0 and P1 is Strong, so this gap is carried into the Module 4 gate map as a release blocker. Before release, the code rules must run on the 20 rows and pass their "must fail" and "must still pass" tests. For non-numeric overclaims and contradictions, where no code rule fits, a second judge from another model company is the second probabilistic check.
 
 Gap: the golden set has no #FAIRNESS rows. Next step: add the same questions asked as different personas, regions and company sizes, and compare pass rates.
 
 ## Judge calibration
 
+Two checks, both against my own calls.
+
+**1. My Module 3 judge (my rubric) vs my Module 2 labels (20 golden-set rows)**
+
 | Measure | Result |
 |---|---|
-| Judge (Gemini) vs my Module 2 labels, pass/fail | 20 of 20 agree (Module 2 judge: 19 of 20) |
+| Pass/fail agreement | 20 of 20 (Module 2 judge: 19 of 20) |
 | Row 19 (unsupported detail) | Now fails, as it should. The "any detail not in the reference fails" rule fixed it. |
 | Format compliance (mode label at start of reason) | 0 of 20. The judge ignored the instruction. |
 
-Limits: my labels were made after I saw the Module 2 judge's calls, so they are not fully blind. 20 rows is a small set. Next: label 12 new answers blind before the judge runs, rerun the judge in a new chat to check that its calls are stable, and require structured output (pass/fail, failure mode, reason in fixed fields) so failure modes are counted automatically, not sorted by hand.
+Limit: my Module 2 labels were made after I saw the Module 2 judge's calls, so they are not fully blind.
+
+**2. Blind check: the Post-Class Practice judge (course rubric, not my Module 3 judge) vs my labels on 12 new Ascend IQ answers**
+
+Practice judge rubric: "the answer is grounded in the source, and it directly answers the question." I labeled all 12 before seeing the judge's calls.
+
+| Measure | Result |
+|---|---|
+| Blind agreement | 10 of 12 (disagreed on answers 03 and 10) |
+| After my review | 9 of 12. I changed answer 05 to fail (it adds Pipedrive, not in the source). I kept answer 08 as fail: its source is an open news search, not Ascend's verified data. |
+| Pattern in all 3 disagreements | The judge passes answers that are partly grounded but add details the source does not contain: 03 (every plan, AI forecasting, $20 price, analyst claim), 05 (Pipedrive), 10 (invented quote and reviewer, wrong top complaint). |
+
+Rewritten rubric: Pass only if every claim in the answer appears in the source, nothing contradicts it, and it directly answers the question. Fail if the answer adds any detail, quote, name, number or scope the source does not contain, or changes a fact. Fail if the answer relies on a source that is not Ascend's verified data, such as an open news or web search. If the verified source contains the answer, a refusal fails.
+
+What this means: a "grounded" rubric without an every-claim rule passes invented specificity, the same failure the Module 2 judge missed on row 19. My Module 3 judge already has the every-claim rule, but it has not yet been tested blind on these 12 answers. Next: run my rewritten rubric blind on the same 12 answers to confirm it fixes the 3 disagreements; require structured output (pass/fail, failure mode, reason in fixed fields) so failure modes are counted automatically; and rerun the trajectory judge twice with the reference path frozen to test stability.
 
 ## How to run this suite
 
@@ -130,4 +151,43 @@ Limits: my labels were made after I saw the Module 2 judge's calls, so they are 
 
 ## Trajectory scorecard
 
-Pending. The golden set holds question, answer and reference only, with no tool calls. To score: compare each recorded run with the reference path on the six dimensions (tool selection, argument correctness, redundant or looping steps, recovery, plan coherence, task completion).
+Task: a client asked Ascend IQ, "Compare the pricing models of Stripe and Adyen." The final answer reads well. Source: M3 Post-Class Practice recorded run.
+
+**Reference path** (the course draft was missing a step; I added `compare`):
+1. get_pricing(company="Stripe")
+2. get_pricing(company="Adyen")
+3. compare(a, b) (added by me: the task is a comparison, and the tool exists)
+4. write_answer(text, sources)
+
+**Recorded run:**
+1. get_pricing(company="Stripe"): verified Stripe pricing.
+2. get_pricing(company="Ayden"): error, no company named "Ayden".
+3. web_search(query="Adyen pricing"): an unverified blog post. Ascend IQ is not allowed to use web results in client answers.
+4. write_answer(sources=["Stripe pricing page", "paymentsblog.example/adyen-fees"]): sent to the client.
+
+**Scores** (judge: Gemini; Ascend IQ is not a Gemini model; reviewed by me)
+
+| Dimension | Judge | My call | Step that decided it |
+|---|---|---|---|
+| Tool selection | Fail | Agree | Step 3: used the forbidden web_search and skipped compare |
+| Argument correctness | Fail | Agree | Step 2: "Ayden" typo, the root of every later step |
+| Redundant or looping | Pass | Agree | Four distinct calls, no repeats |
+| Recovery | Fail | Agree | Step 3: switched to a banned tool instead of retrying get_pricing("Adyen") |
+| Plan coherence | Partial | Agree | Retrieve-then-answer shape is right, but it skipped compare and broke the sourcing rule |
+| Task completion | Partial | **Fail** | Step 4: the client received an answer built on a banned, unverified source. The Adyen half can't be called accurate, and delivering it breaks Ascend's verified-data promise. |
+
+Result: 1 Pass, 1 Partial, 4 Fail (my calls). Human-judge agreement: 5 of 6.
+
+**Worst dimension for a client: Recovery.** The typo alone would have caused a retry or a decline. The recovery is what put an unverified blog into an answer presented as verified intelligence. An output-only eval would pass this answer: it reads well and its Stripe figures are right.
+
+**Check added to the suite (source provenance):** code check on every run. Fail if write_answer cites any source that was not returned by get_pricing or search_intel, such as a web_search result or an outside URL. Paired rule: after a tool error, the agent must retry with a corrected argument or tell the client that part is not covered; any web_search before write_answer fails the run. This run fails both.
+
+| Failure | Priority | Code | LLM judge | Human | Rating |
+|---|---|---|---|---|---|
+| Unverified source in a client answer (trajectory) | P0 | Source-provenance rule | Trajectory judge vs reference path | PdM reviews trajectory fails | Designed: Strong. Today: Medium |
+
+Priority P0: it breaks the core promise (every figure traceable to Ascend's verified data) while the answer looks correct, so users cannot catch it.
+
+Judge stability note: Gemini scored the run twice, before and after I added compare to the reference path. Two scores changed (Argument correctness Partial to Fail, Task completion Fail to Partial). The reference path changed between runs, so this is not a clean stability test, but trajectory judge scores need human review before they gate a release.
+
+Limit: one recorded run. The golden set needs recorded runs for each of its 20 questions before trajectory can be a release gate.
