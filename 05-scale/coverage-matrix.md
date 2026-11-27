@@ -24,11 +24,3 @@ We've flagged UX Trust as the most critical gap for AI Report Summaries because 
 ## After the Pressure Test
 
 Gemini (cross-company review) agreed with the marks and the UX Trust plan. Two changes. (1) Fairness: UX Trust stays the critical gap, but Fairness is no longer left without an owner. A quarterly periodic audit will compare a sample of summaries across regions and client industries. That answers the manager's question: we don't yet know whether summaries are worse for some regions or industries, and the audit is how we find out. (2) Robustness: still the accepted gap, but the 5 longest and most table-heavy reports join the release test set, so the existing judge sees edge cases at no new cost. Not changed: the tone gate blocks release here, while off-brand tone is only Advisory for Ascend IQ, because no person reads these summaries before the client does.
-
-## Ascend IQ (not launched) · coverage today vs gates designed in Module 4
-
-| Product | Hallucination Rate | Fairness | Latency | UX Trust | Robustness |
-|---|---|---|---|---|---|
-| Ascend IQ (External) | ⚠️ Partial: Hard gates designed (Staging judge, PR figure-match and safety rules); today the judge alone has run | ❌ Gap: no golden-set row tests persona, region or company size | ❌ Gap: Soft gate P95 <= 10 s designed, not measured yet | ⚠️ Partial: Advisory slang word list at PR (word list only) | ⚠️ Partial: over-refusal judge caught row 8; decline-phrase rule not yet run |
-
-Same lesson as the row above: Ascend IQ's checks are designed but mostly not running. No P0 or P1 has Strong coverage today, which is a release blocker in `04-eval-gates/launch-strategy.md`.
