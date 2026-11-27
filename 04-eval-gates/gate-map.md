@@ -58,3 +58,21 @@ Gemini, as the engineering lead, challenged all six calls. Changed: Row 1 moved 
 - What's true: G2 reviews: the three complaints are correct. The answer took 4.2 seconds, and the target is 2.0.
 - Automated eval: Fail · Latency. Exceeded the maximum response time.
 - My call: Soft at Staging. We gate on P95 ≤ 10 s, our M1 bar, not the lab's 2.0 s; this answer passes, but above 10 s VPs go back to manual search and engagement keeps falling.
+
+## Beyond the six rows: gates from my Module 3 suite
+
+The lab's six rows don't cover every P0 and P1 risk in my taxonomy. Ascend IQ sells verified intelligence at $50K+ a year, so it follows the compliance and defensibility goal: every factual P0 is a Hard gate, and latency is a Soft gate.
+
+| Gate | Risk (priority) | Level | Placement | Check | Threshold | Status |
+|---|---|---|---|---|---|---|
+| Figure-match rule (first layer for rows 1 and 8) | Stale data, Contradicts the reference (P0) | Hard | Pull Request | Code: every figure in the answer matches the reference, and the source date is inside the freshness window | 100% pass on the golden set | Designed, not yet run |
+| Release kill switch (second layer for row 5) | Confident overclaims (P0) | Hard | Release | Rerun the safety rule and judge from the eval spec on the release build | 0 overclaim fails, 100% safety-rule pass | Designed, not yet run |
+| Source provenance | Unverified source in a client answer (P0) | Hard | Pull Request (code) + Staging (trajectory judge) | Code: write_answer cites only sources returned by get_pricing or search_intel; any web_search before write_answer fails | 0 fails | Can't gate yet: needs recorded runs for all 20 golden-set questions (1 today) |
+| Over-refusal | Over-refusal (P1) | Hard at PR, Soft at Staging | Pull Request (decline-phrase rule) + Staging (judge) | PR: any regression on a must-still-pass row (13, 18) blocks the merge (course rule for P1). Staging: false-refusal rate next to the clean-decline rate | False-refusal ceiling: 0 on golden-set rows whose reference holds the answer (row 8 must be fixed), next to >= 95% clean declines | Judge run (caught row 8); rule not yet run |
+
+## Release blockers (no override)
+
+1. **No P0 or P1 has Strong coverage today.** Every one rests on the judge alone (Medium). Release stays blocked until each code rule runs on the 20 rows and passes its must-fail and must-still-pass tests, and a second judge from another model company covers non-numeric overclaims and contradictions.
+2. **Golden set is below the floor.** 20 scored cases against the course floor of 30. Fix: add the 12 blind-labeled Post-Class Practice answers from Module 3 (32 cases), plus at least 2 must-refuse and 2 fairness cases (same question asked as different personas, regions and company sizes). Until they are added and rerun, one flaky result moves the pass rate by 5 points, so the gates can block on noise.
+3. **Latency not measured yet.** The P95 <= 10 s Soft gate (row 3) has no measurement on the golden set.
+4. **Post-fix regression.** After the overclaim fix, rerun the full suite and confirm over-refusals and P95 stay inside their thresholds before release.
